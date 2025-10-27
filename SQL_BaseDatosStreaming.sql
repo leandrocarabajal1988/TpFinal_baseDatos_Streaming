@@ -104,3 +104,20 @@ CREATE TABLE ContenidoDirector (
     FOREIGN KEY (IDContenido) REFERENCES Contenidos(IDContenido),
     FOREIGN KEY (IDDirector) REFERENCES Directores(IDDirector)
 );
+
+-- Tabla Listas
+CREATE TABLE Listas (
+    IDLista INT IDENTITY(1,1) PRIMARY KEY,  
+    IDUsuario INT NOT NULL,
+    Nombre NVARCHAR(100) NOT NULL,
+    FOREIGN KEY (IDUsuario) REFERENCES Usuarios(IDUsuario)
+);
+
+-- Relación N:N entre Listas y Contenidos
+CREATE TABLE ListaContenido (
+    IDLista INT NOT NULL,
+    IDContenido INT NOT NULL,
+    PRIMARY KEY (IDLista, IDContenido),
+    FOREIGN KEY (IDLista) REFERENCES Listas(IDLista),
+    FOREIGN KEY (IDContenido) REFERENCES Contenidos(IDContenido)
+);
