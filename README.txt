@@ -1,11 +1,16 @@
-		TP FINAL BASE DE DATOS, PLATAFORMA STREAMING
+=================================================================================================================			
+				TP FINAL BASE DE DATOS, PLATAFORMA STREAMING
+=================================================================================================================
 
-Sistema que permite gestionar  una plataforma de streaming de películas y series similar a Netflix.
+     Sistema que permite gestionar  una plataforma de streaming de películas y series similar a Netflix.
 
-_____________________________________________________________________________________________________
+_________________________________________________________________________________________________________________
 
-Word TP final -------------------------------------------CREADO
-Word Resumen de minutas ---------------------------------CREADO
-SQL\_BaseDatosStreaming ----------------------------------CREADO CON RELACIONES BASE
-DER -----------------------------------------------------CREADO
-(con sqlserver, armar la version con drawio)
+Word TP final -----------------------------------------------------------CREADO
+Word Resumen de minutas -------------------------------------------------CREADO
+SQL\_BaseDatosStreaming -------------------------------------------------CREADO CON RELACIONES BASE
+DER ---------------------------------------------------------------------CREADO
+(con sqlserver, armar la version con drawio)-----------------------------REALIZADO Y ACTUALIZADO EN EL WORD
+
+_________________________________________________________________________________________________________________
+
