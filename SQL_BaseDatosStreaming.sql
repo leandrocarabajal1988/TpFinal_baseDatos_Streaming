@@ -8,6 +8,16 @@ CREATE TABLE Roles (
     Descripcion NVARCHAR(100) NOT NULL
 );
 
+CREATE TABLE RolUsuario (
+    IDUsuarioRol INT PRIMARY KEY IDENTITY(1,1),
+    IDUsuario INT NOT NULL,
+    IDRol INT NOT NULL,
+    RolActivo BIT NOT NULL,
+    FechaAsignacion DATETIME NOT NULL,
+    FOREIGN KEY (IDUsuario) REFERENCES Usuarios(IDUsuario),
+    FOREIGN KEY (IDRol) REFERENCES Roles(IDRol)
+);
+
 -- Tabla Usuarios
 CREATE TABLE Usuarios (
     IDUsuario INT PRIMARY KEY IDENTITY(1,1),
