@@ -2,20 +2,12 @@ CREATE DATABASE BaseDatosStreaming;
 GO
 USE BaseDatosStreaming;
 
+GO
+
 -- Tabla Roles
 CREATE TABLE Roles (
     IDRol INT PRIMARY KEY IDENTITY(1,1),
     Descripcion NVARCHAR(100) NOT NULL
-);
-
-CREATE TABLE RolUsuario (
-    IDUsuarioRol INT PRIMARY KEY IDENTITY(1,1),
-    IDUsuario INT NOT NULL,
-    IDRol INT NOT NULL,
-    RolActivo BIT NOT NULL,
-    FechaAsignacion DATETIME NOT NULL,
-    FOREIGN KEY (IDUsuario) REFERENCES Usuarios(IDUsuario),
-    FOREIGN KEY (IDRol) REFERENCES Roles(IDRol)
 );
 
 -- Tabla Usuarios
@@ -29,6 +21,18 @@ CREATE TABLE Usuarios (
     IDRol INT NOT NULL,
     FOREIGN KEY (IDRol) REFERENCES Roles(IDRol)
 );
+
+-- Tabla RolUsuarios
+CREATE TABLE RolUsuario (
+    IDUsuarioRol INT PRIMARY KEY IDENTITY(1,1),
+    IDUsuario INT NOT NULL,
+    IDRol INT NOT NULL,
+    RolActivo BIT NOT NULL,
+    FechaAsignacion DATETIME NOT NULL,
+    FOREIGN KEY (IDUsuario) REFERENCES Usuarios(IDUsuario),
+    FOREIGN KEY (IDRol) REFERENCES Roles(IDRol)
+);
+
 
 -- Tabla Géneros
 CREATE TABLE Generos (
@@ -131,3 +135,153 @@ CREATE TABLE ListaContenido (
     FOREIGN KEY (IDLista) REFERENCES Listas(IDLista),
     FOREIGN KEY (IDContenido) REFERENCES Contenidos(IDContenido)
 );
+
+GO
+
+------------------ para el 10/11 Agregados----------------------
+
+------------------------- VISTAS --------------------------------
+-- Vista 1: Contenidos más vistos
+CREATE VIEW V_ContenidosMasVistos AS
+SELECT C.IDContenido, C.Titulo, COUNT(V.IDVisualizacion) AS TotalVisualizaciones
+FROM Contenidos C
+JOIN Visualizaciones V ON C.IDContenido = V.IDContenido
+GROUP BY C.IDContenido, C.Titulo;
+
+
+GO
+
+-- Vista 2: Contenidos mejor puntuados
+CREATE VIEW vw_ContenidosMejorPuntuados AS
+SELECT C.IDContenido, C.Titulo, AVG(R.Puntuacion) AS PromedioPuntuacion
+FROM Contenidos C
+JOIN Reseñas R ON C.IDContenido = R.IDContenido
+GROUP BY C.IDContenido, C.Titulo
+
+GO
+
+-- Vista 3: Usuarios más activos
+CREATE VIEW vw_UsuariosMasActivos AS
+SELECT U.IDUsuario, U.Nombre, U.Apellido, COUNT(V.IDVisualizacion) AS TotalVisualizaciones
+FROM Usuarios U
+JOIN Visualizaciones V ON U.IDUsuario = V.IDUsuario
+GROUP BY U.IDUsuario, U.Nombre, U.Apellido
+
+GO
+
+---------------------------- PROCEDIMIENTOS ------------------------------
+
+-- Procedimiento 1: Registrar visualización
+CREATE PROCEDURE sp_RegistrarVisualizacion
+  @IDUsuario INT,
+  @IDContenido INT,
+  @Dispositivo NVARCHAR(50),
+  @Completado BIT
+AS
+BEGIN
+  INSERT INTO Visualizaciones (IDUsuario, IDContenido, FechaVisualizacion, Dispositivo, Completado)
+  VALUES (@IDUsuario, @IDContenido, GETDATE(), @Dispositivo, @Completado);
+END;
+
+GO
+
+-- Procedimiento 2: Registrar reseña
+CREATE PROCEDURE sp_RegistrarReseña
+  @IDUsuario INT,
+  @IDContenido INT,
+  @Puntuacion INT,
+  @Comentario NVARCHAR(500)
+AS
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM Visualizaciones
+    WHERE IDUsuario = @IDUsuario AND IDContenido = @IDContenido
+  )
+  BEGIN
+    INSERT INTO Reseñas (IDUsuario, IDContenido, Puntuacion, Comentario, FechaReseña)
+    VALUES (@IDUsuario, @IDContenido, @Puntuacion, @Comentario, GETDATE());
+  END
+  ELSE
+  BEGIN
+    RAISERROR('El usuario no ha visualizado este contenido.', 16, 1);
+  END
+END;
+
+GO
+
+---------------------------------- TIGGERS ----------------------------------------
+
+-- Trigger 1: Validar puntuación de reseña
+CREATE TRIGGER trg_ValidarPuntuacionReseña
+ON Reseñas
+FOR INSERT
+AS
+BEGIN
+  IF EXISTS (
+    SELECT * FROM inserted WHERE Puntuacion < 1 OR Puntuacion > 5
+  )
+  BEGIN
+    RAISERROR('La puntuación debe estar entre 1 y 5.', 16, 1);
+    ROLLBACK;
+  END
+END;
+
+GO
+
+-- Trigger 2: Actualizar estado de suscripción
+CREATE TRIGGER trg_ActualizarEstadoSuscripcion
+ON Suscripciones
+AFTER INSERT, UPDATE
+AS
+BEGIN
+  UPDATE S
+  SET Estado = 'Vencida'
+  FROM Suscripciones S
+  WHERE S.FechaFin < GETDATE() AND S.Estado <> 'Vencida';
+END;
+
+GO
+
+-- Trigger 3: Bloquear reseñas duplicadas
+CREATE TRIGGER trg_BloquearReseñasDuplicadas
+ON Reseñas
+INSTEAD OF INSERT
+AS
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM Reseñas R
+    JOIN inserted I ON R.IDUsuario = I.IDUsuario AND R.IDContenido = I.IDContenido
+  )
+  BEGIN
+    RAISERROR('Ya existe una reseña para este contenido por este usuario.', 16, 1);
+    RETURN;
+  END
+
+  INSERT INTO Reseñas (IDUsuario, IDContenido, Puntuacion, Comentario, FechaReseña)
+  SELECT IDUsuario, IDContenido, Puntuacion, Comentario, FechaReseña
+  FROM inserted;
+END;
+
+GO
+
+------------------------------------- FUNCIONES -------------------------------------
+
+-- Función: Total de minutos vistos por usuario
+CREATE FUNCTION fn_totalMinutosVistosPorUsuario (@IDUsuario INT)
+RETURNS INT
+AS
+BEGIN
+  DECLARE @Total INT;
+  SELECT @Total = SUM(C.DuracionMinutos)
+  FROM Visualizaciones V
+  JOIN Contenidos C ON V.IDContenido = C.IDContenido
+  WHERE V.IDUsuario = @IDUsuario;
+  RETURN ISNULL(@Total, 0);
+END;
+
+GO
+
+--------------------------- Proxima Revision 17/11 ---------------------------
+--------------------- carga de daltos para pruebas INSERS --------------------
+
