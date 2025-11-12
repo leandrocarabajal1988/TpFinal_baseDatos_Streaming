@@ -209,7 +209,30 @@ END;
 
 GO
 
-    -- Procedimiento 3: Registrar visualización
+-- Procedimiento 3: Crear reporte de total de minutos y horas de consumo por usuario utilizando funcion
+CREATE PROCEDURE sp_ReporteConsumoUsuario
+    @IDUsuario INT
+AS
+BEGIN
+    DECLARE @TotalMinutos INT;
+    DECLARE @NombreCompleto NVARCHAR(100);
+    
+    SELECT @NombreCompleto = Nombre + ' ' + Apellido 
+    FROM Usuarios 
+    WHERE IDUsuario = @IDUsuario;
+    
+    
+    SET @TotalMinutos = dbo.fn_totalMinutosVistosPorUsuario(@IDUsuario);
+    
+    SELECT 
+        @IDUsuario AS IDUsuario,
+        @NombreCompleto AS Usuario,
+        @TotalMinutos AS TotalMinutosVistos,
+        @TotalMinutos * 1.0 / 60 AS TotalHorasVistas;
+        
+END;
+GO
+
 ---------------------------------- TRIGGERS ----------------------------------------
 
 -- Trigger 1: Validar puntuación de reseña
