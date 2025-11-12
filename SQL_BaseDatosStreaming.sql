@@ -16,7 +16,7 @@ CREATE TABLE Usuarios (
     Nombre NVARCHAR(50) NOT NULL,
     Apellido NVARCHAR(50) NOT NULL,
     Email NVARCHAR(100) NOT NULL UNIQUE,
-    Contrase�a NVARCHAR(100) NOT NULL,
+    Contraseña NVARCHAR(100) NOT NULL,
     FechaRegistro DATE NOT NULL DEFAULT GETDATE(),
     IDRol INT NOT NULL,
     FOREIGN KEY (IDRol) REFERENCES Roles(IDRol)
@@ -34,7 +34,7 @@ CREATE TABLE RolUsuario (
 );
 
 
--- Tabla G�neros
+-- Tabla Géneros
 CREATE TABLE Generos (
     IDGenero INT PRIMARY KEY IDENTITY(1,1),
     Nombre NVARCHAR(50) NOT NULL
@@ -45,9 +45,9 @@ CREATE TABLE Contenidos (
     IDContenido INT PRIMARY KEY IDENTITY(1,1),
     Titulo NVARCHAR(100) NOT NULL,
     Sinopsis NVARCHAR(MAX),
-    A�oLanzamiento INT NOT NULL,
+    AñoLanzamiento INT NOT NULL,
     DuracionMinutos INT NOT NULL,
-    TipoContenido NVARCHAR(20) NOT NULL, -- 'Pel�cula' o 'Serie'
+    TipoContenido NVARCHAR(20) NOT NULL, -- 'Película' o 'Serie'
     IDGenero INT NOT NULL,
     FOREIGN KEY (IDGenero) REFERENCES Generos(IDGenero)
 );
@@ -64,14 +64,14 @@ CREATE TABLE Visualizaciones (
     FOREIGN KEY (IDContenido) REFERENCES Contenidos(IDContenido)
 );
 
--- Tabla Rese�as
-CREATE TABLE Rese�as (
-    IDRese�a INT PRIMARY KEY IDENTITY(1,1),
+-- Tabla Reseñas
+CREATE TABLE Reseñas (
+    IDReseña INT PRIMARY KEY IDENTITY(1,1),
     IDUsuario INT NOT NULL,
     IDContenido INT NOT NULL,
     Puntuacion INT CHECK (Puntuacion BETWEEN 1 AND 5),
     Comentario NVARCHAR(500),
-    FechaRese�a DATETIME NOT NULL DEFAULT GETDATE(),
+    FechaReseña DATETIME NOT NULL DEFAULT GETDATE(),
     FOREIGN KEY (IDUsuario) REFERENCES Usuarios(IDUsuario),
     FOREIGN KEY (IDContenido) REFERENCES Contenidos(IDContenido)
 );
@@ -80,7 +80,7 @@ CREATE TABLE Rese�as (
 CREATE TABLE Suscripciones (
     IDSuscripcion INT PRIMARY KEY IDENTITY(1,1),
     IDUsuario INT NOT NULL,
-    TipoSuscripcion NVARCHAR(20) NOT NULL, -- 'Gratuita', 'Est�ndar', 'Premium'
+    TipoSuscripcion NVARCHAR(20) NOT NULL, -- 'Gratuita', 'Estándar', 'Premium'
     FechaInicio DATE NOT NULL,
     FechaFin DATE NOT NULL,
     Estado NVARCHAR(20) NOT NULL, -- 'Activa', 'Vencida'
@@ -101,7 +101,7 @@ CREATE TABLE Directores (
     FechaNacimiento DATE
 );
 
--- Relaci�n N:N entre Contenidos y Actores
+-- Relación N:N entre Contenidos y Actores
 CREATE TABLE ContenidoActor (
     IDContenido INT NOT NULL,
     IDActor INT NOT NULL,
@@ -110,7 +110,7 @@ CREATE TABLE ContenidoActor (
     FOREIGN KEY (IDActor) REFERENCES Actores(IDActor)
 );
 
--- Relaci�n N:N entre Contenidos y Directores
+-- Relación N:N entre Contenidos y Directores
 CREATE TABLE ContenidoDirector (
     IDContenido INT NOT NULL,
     IDDirector INT NOT NULL,
@@ -127,7 +127,7 @@ CREATE TABLE Listas (
     FOREIGN KEY (IDUsuario) REFERENCES Usuarios(IDUsuario)
 );
 
--- Relaci�n N:N entre Listas y Contenidos
+-- Relación N:N entre Listas y Contenidos
 CREATE TABLE ListaContenido (
     IDLista INT NOT NULL,
     IDContenido INT NOT NULL,
@@ -141,7 +141,7 @@ GO
 ------------------ para el 10/11 Agregados----------------------
 
 ------------------------- VISTAS --------------------------------
--- Vista 1: Contenidos m�s vistos
+-- Vista 1: Contenidos más vistos
 CREATE VIEW V_ContenidosMasVistos AS
 SELECT C.IDContenido, C.Titulo, COUNT(V.IDVisualizacion) AS TotalVisualizaciones
 FROM Contenidos C
@@ -155,12 +155,12 @@ GO
 CREATE VIEW vw_ContenidosMejorPuntuados AS
 SELECT C.IDContenido, C.Titulo, AVG(R.Puntuacion) AS PromedioPuntuacion
 FROM Contenidos C
-JOIN Rese�as R ON C.IDContenido = R.IDContenido
+JOIN Reseñas R ON C.IDContenido = R.IDContenido
 GROUP BY C.IDContenido, C.Titulo
 
 GO
 
--- Vista 3: Usuarios m�s activos
+-- Vista 3: Usuarios más activos
 CREATE VIEW vw_UsuariosMasActivos AS
 SELECT U.IDUsuario, U.Nombre, U.Apellido, COUNT(V.IDVisualizacion) AS TotalVisualizaciones
 FROM Usuarios U
@@ -171,7 +171,7 @@ GO
 
 ---------------------------- PROCEDIMIENTOS ------------------------------
 
--- Procedimiento 1: Registrar visualizaci�n
+-- Procedimiento 1: Registrar visualización
 CREATE PROCEDURE sp_RegistrarVisualizacion
   @IDUsuario INT,
   @IDContenido INT,
@@ -185,8 +185,8 @@ END;
 
 GO
 
--- Procedimiento 2: Registrar rese�a
-CREATE PROCEDURE sp_RegistrarRese�a
+-- Procedimiento 2: Registrar reseña
+CREATE PROCEDURE sp_RegistrarReseña
   @IDUsuario INT,
   @IDContenido INT,
   @Puntuacion INT,
@@ -198,7 +198,7 @@ BEGIN
     WHERE IDUsuario = @IDUsuario AND IDContenido = @IDContenido
   )
   BEGIN
-    INSERT INTO Rese�as (IDUsuario, IDContenido, Puntuacion, Comentario, FechaRese�a)
+    INSERT INTO Reseñas (IDUsuario, IDContenido, Puntuacion, Comentario, FechaReseña)
     VALUES (@IDUsuario, @IDContenido, @Puntuacion, @Comentario, GETDATE());
   END
   ELSE
@@ -209,11 +209,12 @@ END;
 
 GO
 
----------------------------------- TIGGERS ----------------------------------------
+    -- Procedimiento 3: Registrar visualización
+---------------------------------- TRIGGERS ----------------------------------------
 
--- Trigger 1: Validar puntuaci�n de rese�a
-CREATE TRIGGER trg_ValidarPuntuacionRese�a
-ON Rese�as
+-- Trigger 1: Validar puntuación de reseña
+CREATE TRIGGER trg_ValidarPuntuacionReseña
+ON Reseñas
 FOR INSERT
 AS
 BEGIN
@@ -221,14 +222,14 @@ BEGIN
     SELECT * FROM inserted WHERE Puntuacion < 1 OR Puntuacion > 5
   )
   BEGIN
-    RAISERROR('La puntuaci�n debe estar entre 1 y 5.', 16, 1);
+    RAISERROR('La puntuación debe estar entre 1 y 5.', 16, 1);
     ROLLBACK;
   END
 END;
 
 GO
 
--- Trigger 2: Actualizar estado de suscripci�n
+-- Trigger 2: Actualizar estado de suscripción
 CREATE TRIGGER trg_ActualizarEstadoSuscripcion
 ON Suscripciones
 AFTER INSERT, UPDATE
@@ -242,32 +243,56 @@ END;
 
 GO
 
--- Trigger 3: Bloquear rese�as duplicadas
-CREATE TRIGGER trg_BloquearRese�asDuplicadas
-ON Rese�as
+-- Trigger 3: Bloquear reseñas duplicadas
+CREATE TRIGGER trg_BloquearReseñasDuplicadas
+ON Reseñas
 INSTEAD OF INSERT
 AS
 BEGIN
   IF EXISTS (
     SELECT 1
-    FROM Rese�as R
+    FROM Reseñas R
     JOIN inserted I ON R.IDUsuario = I.IDUsuario AND R.IDContenido = I.IDContenido
   )
   BEGIN
-    RAISERROR('Ya existe una rese�a para este contenido por este usuario.', 16, 1);
+    RAISERROR('Ya existe una reseña para este contenido por este usuario.', 16, 1);
     RETURN;
   END
 
-  INSERT INTO Rese�as (IDUsuario, IDContenido, Puntuacion, Comentario, FechaRese�a)
-  SELECT IDUsuario, IDContenido, Puntuacion, Comentario, FechaRese�a
+  INSERT INTO Reseñas (IDUsuario, IDContenido, Puntuacion, Comentario, FechaReseña)
+  SELECT IDUsuario, IDContenido, Puntuacion, Comentario, FechaReseña
   FROM inserted;
 END;
 
 GO
 
+-- Trigger 4: Evita eliminacion de usuarios con suscripción activa
+CREATE TRIGGER trg_BloquearEliminacionUsuarioConSuscripcion
+ON Usuarios
+INSTEAD OF DELETE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM deleted D
+        JOIN Suscripciones S ON D.IDUsuario = S.IDUsuario
+        WHERE S.Estado = 'Activa'
+    )
+    BEGIN
+        RAISERROR('No se puede eliminar un usuario con una suscripción activa.', 16, 1);
+        RETURN;
+    END
+
+    DELETE FROM Usuarios
+    WHERE IDUsuario IN (SELECT IDUsuario FROM deleted);
+END;
+
+GO
+
+
 ------------------------------------- FUNCIONES -------------------------------------
 
--- Funci�n: Total de minutos vistos por usuario
+-- Función: Total de minutos vistos por usuario
 CREATE FUNCTION fn_totalMinutosVistosPorUsuario (@IDUsuario INT)
 RETURNS INT
 AS
