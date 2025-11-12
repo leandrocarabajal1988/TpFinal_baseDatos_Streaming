@@ -216,20 +216,22 @@ AS
 BEGIN
     DECLARE @TotalMinutos INT;
     DECLARE @NombreCompleto NVARCHAR(100);
+    DECLARE @TotalHoras DECIMAL(10,2);
     
     SELECT @NombreCompleto = Nombre + ' ' + Apellido 
     FROM Usuarios 
     WHERE IDUsuario = @IDUsuario;
     
-    
     SET @TotalMinutos = dbo.fn_totalMinutosVistosPorUsuario(@IDUsuario);
+    
+    
+    SET @TotalHoras = ROUND(@TotalMinutos * 1.0 / 60, 2);
     
     SELECT 
         @IDUsuario AS IDUsuario,
         @NombreCompleto AS Usuario,
         @TotalMinutos AS TotalMinutosVistos,
-        @TotalMinutos * 1.0 / 60 AS TotalHorasVistas;
-        
+        @TotalHoras AS TotalHorasVistas;
 END;
 GO
 
