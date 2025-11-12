@@ -20,11 +20,13 @@ Vistas SQL --------------------------------------------------------------CREADAS
 Procedimientos almacenados ----------------------------------------------CREADOS Y PROBADOS
 - sp_RegistrarVisualizacion
 - sp_RegistrarReseña
+- sp_ReporteConsumoUsuario
 
 Triggers ---------------------------------------------------------------CREADOS Y PROBADOS
 - trg_ValidarPuntuacionReseña
 - trg_ActualizarEstadoSuscripcion
 - trg_BloquearReseñasDuplicadas
+- trg_BloquearEliminacionUsuarioConSuscripcion
 
 Función escalar --------------------------------------------------------CREADA Y PROBADA
 - fn_totalMinutosVistosPorUsuario
