@@ -18,17 +18,19 @@ CREATE TABLE Usuarios (
     Email NVARCHAR(100) NOT NULL UNIQUE,
     Contraseña NVARCHAR(100) NOT NULL,
     FechaRegistro DATE NOT NULL DEFAULT GETDATE(),
+    FechaBaja DATE NULL,
+    MotivoBaja VARCHAR (255) NULL,
     IDRol INT NOT NULL,
     FOREIGN KEY (IDRol) REFERENCES Roles(IDRol)
 );
 
 -- Tabla RolUsuarios
 CREATE TABLE RolUsuario (
-    IDUsuarioRol INT PRIMARY KEY IDENTITY(1,1),
     IDUsuario INT NOT NULL,
     IDRol INT NOT NULL,
     RolActivo BIT NOT NULL,
-    FechaAsignacion DATETIME NOT NULL,
+    FechaAsignacion DATE NOT NULL,
+    PRIMARY KEY (IDUsuario, IDRol),
     FOREIGN KEY (IDUsuario) REFERENCES Usuarios(IDUsuario),
     FOREIGN KEY (IDRol) REFERENCES Roles(IDRol)
 );
@@ -69,9 +71,9 @@ CREATE TABLE Reseñas (
     IDReseña INT PRIMARY KEY IDENTITY(1,1),
     IDUsuario INT NOT NULL,
     IDContenido INT NOT NULL,
-    Puntuacion INT CHECK (Puntuacion BETWEEN 1 AND 5),
+    Puntuacion INT,
     Comentario NVARCHAR(500),
-    FechaReseña DATETIME NOT NULL DEFAULT GETDATE(),
+    FechaReseña DATE NOT NULL DEFAULT GETDATE(),
     FOREIGN KEY (IDUsuario) REFERENCES Usuarios(IDUsuario),
     FOREIGN KEY (IDContenido) REFERENCES Contenidos(IDContenido)
 );
